@@ -6,16 +6,32 @@ const YOUR_LOCAL_IP = 'https://coturn.yohanes.dpdns.org'; // Pastikan IP ini mas
 let otherUser; // Variabel untuk menyimpan ID pengguna lain
 
 const peerConnection = new RTCPeerConnection({
-    iceServers: [
-        {
-            urls : "turn:coturn.yohanes.dpdns.org?transport=tcp",
-            username : "user-cf",
-            credential : "pass-cf",
-        },
-        {
-            urls: 'stun:stun.l.google.com:19302'
-        }
-    ]
+    iceServers:
+        [
+            {
+                "urls": "stun:stun.relay.metered.ca:80"
+            },
+            {
+                "urls": "turn:standard.relay.metered.ca:80",
+                "username": "e651696018cad66ae03380eb",
+                "credential": "ckdfpGoJAadR+Twh"
+            },
+            {
+                "urls": "turn:standard.relay.metered.ca:80?transport=tcp",
+                "username": "e651696018cad66ae03380eb",
+                "credential": "ckdfpGoJAadR+Twh"
+            },
+            {
+                "urls": "turn:standard.relay.metered.ca:443",
+                "username": "e651696018cad66ae03380eb",
+                "credential": "ckdfpGoJAadR+Twh"
+            },
+            {
+                "urls": "turns:standard.relay.metered.ca:443?transport=tcp",
+                "username": "e651696018cad66ae03380eb",
+                "credential": "ckdfpGoJAadR+Twh"
+            }
+        ]
 });
 
 let localStream;
