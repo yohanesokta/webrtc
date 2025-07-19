@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ws_webrtc
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_CREDENSIAL
+        value: 6bc03cc12e07ba95884c8341821d8ead5a81

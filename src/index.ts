@@ -3,7 +3,11 @@ import { Server as SocketIoServer} from "socket.io";
 import path from "path";
 import http from "http";
 import dotenv from "dotenv"
-dotenv.config()
+
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config();
+}
+
 
 export const app = express();
 const server = http.createServer(app);

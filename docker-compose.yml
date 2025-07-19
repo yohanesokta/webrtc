@@ -1,0 +1,13 @@
+version: '3.8'
+
+service:
+  app:
+    image: yohanesokta/webrtc:latest
+    restart: always
+    ports:
+      - "3002 : 3002"
+    environment:
+      PORT : ${PORT}
+      APP_CREDENSIAL : ${APP_CREDENSIAL}
+      NODE_ENV : production
+      
