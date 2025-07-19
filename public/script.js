@@ -1,4 +1,4 @@
-const socket = io("https://webrtc-znjg.vercel.app");
+const socket = io()
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
 
