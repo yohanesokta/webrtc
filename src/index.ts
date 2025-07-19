@@ -5,8 +5,8 @@ import http from "http";
 import dotenv from "dotenv"
 dotenv.config()
 
-const app = express();
-export const server = http.createServer(app);
+export const app = express();
+const server = http.createServer(app);
 const io = new SocketIoServer(server);
 const credentials  = process.env.APP_CREDENSIAL || ""
 
