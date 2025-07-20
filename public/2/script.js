@@ -62,6 +62,14 @@ socket.on('user-joined', (userId) => {
         .catch(e => console.error(e));
 });
 
+
+socket.emit("message",
+    JSON.stringify({
+        device_id : "xiaomi",
+        message : "hello mathefucker"
+    })
+)
+
 socket.on('offer', (payload) => {
     console.log('Menerima offer dari:', payload.from);
     otherUser = payload.from; // Simpan juga ID pembuat offer

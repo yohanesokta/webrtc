@@ -1,8 +1,9 @@
-import express from "express";
+import express, { response } from "express";
 import { Server as SocketIoServer} from "socket.io";
 import path from "path";
-import http from "http";
+import http, { request } from "http";
 import dotenv from "dotenv"
+import { getMessageData, updateMessage } from "./main.service";
 
 if (process.env.NODE_ENV !== "production") {
     dotenv.config();
@@ -13,11 +14,13 @@ export const app = express();
 const server = http.createServer(app);
 const io = new SocketIoServer(server);
 const credentials  = process.env.APP_CREDENSIAL || ""
-
-app.use(express.static(path.join(__dirname,'..','public')));
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-});
+app.use(express.json())
+if (process.env.DISABLE_TEST != "active") {
+  app.use(express.static(path.join(__dirname,'..','public')));
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+  });
+}
 
 app.post('/turn', async (_,response) => {
     try {
@@ -30,10 +33,19 @@ app.post('/turn', async (_,response) => {
     }
 })
 
+app.post('/message',async (request,response) => {
+  const last: string|null = request.body?.last || null
+  try {
+    const data = await getMessageData(last)
+    response.json(data)
+  } catch (error) {
+      console.log(error)
+      response.status(500).json({ message : "internal server error"})
+    } 
+})
+
 io.on('connection', (socket) => {
   console.log('Seorang pengguna terhubung:', socket.id);
-
-  
 
   socket.on('join-room', (roomId: string) => {
     socket.join(roomId);
@@ -61,6 +73,25 @@ io.on('connection', (socket) => {
     console.log('Pengguna terputus:', socket.id);
     
   });
+
+  interface Messages {
+    device_id : string
+    message : string
+  }
+
+  socket.on('message', async (payload)=> {
+    console.log(payload)
+    try {
+      const messages : Messages = JSON.parse(payload)
+      const status  = await updateMessage(messages)
+      if (status) {
+        
+        io.emit('message',JSON.stringify(messages))
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  })
 });
 
 const PORT = process.env.PORT || 3002;

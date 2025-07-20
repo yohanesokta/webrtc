@@ -3,28 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebRTC Simple Chat</title>
-    <style>
-        body { font-family: sans-serif; background: #2c2c2c; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .videos { display: flex; gap: 20px; }
-        video { border-radius: 8px; background: #000; width: 400px; height: 300px; transform: scaleX(-1); }
-        .video-container { text-align: center; }
-        p { margin-top: 5px; }
-    </style>
+    <title>Document</title>
 </head>
 <body>
-    <div class="videos">
-        <div class="video-container">
-            <p>Video Lokal</p>
-            <video id="localVideo" autoplay muted></video>
-        </div>
-        <div class="video-container">
-            <p>Video Remote</p>
-            <video id="remoteVideo" autoplay></video>
-        </div>
-    </div>
+    <div id="chats"></div>
+    <form action="">
+        <input type="text" placeholder="id">
+        <input type="text" placeholder="pesan">
+        <button type="submit">Kirim</button>
+    </form>
+
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
+    <script>
+        const socket = io();
+        
+        socket.on("message",(payload) => {
+            console.log('helo')
+            const pesan = JSON.parse(payload);
+            const tagPesan = document.createElement('p')
+            tagPesan.textContent = `${pesan.device_id} : ${pesan.message}`
+            document.getElementById('chats').appendChild(tagPesan)
+        })
+
+        document.querySelector("form").addEventListener("submit",(event)=>{
+            event.preventDefault();
+            const id = event.target[0].value
+            const pesan = event.target[1].value
+            socket.emit('message',JSON.stringify({
+                device_id : id,
+                message : pesan
+            }))
+            event.target[1].value = ""
+        })
+    </script>
 </body>
 </html>
