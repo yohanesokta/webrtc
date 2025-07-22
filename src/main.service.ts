@@ -2,6 +2,10 @@ import { PrismaClient } from "../generated/prisma"
 
 const prisma = new PrismaClient()
 
+export const deleteMessage = async () => {
+    return await prisma.chats.deleteMany();
+}
+
 export const updateMessage = async (message : {
     device_id : string
     message : string

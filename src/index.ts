@@ -3,7 +3,7 @@ import { Server as SocketIoServer} from "socket.io";
 import path from "path";
 import http, { request } from "http";
 import dotenv from "dotenv"
-import { getMessageData, updateMessage } from "./main.service";
+import { getMessageData, updateMessage, deleteMessage } from "./main.service";
 
 if (process.env.NODE_ENV !== "production") {
     dotenv.config();
@@ -31,6 +31,42 @@ app.post('/turn', async (_,response) => {
       console.log(error)
       response.status(500).json({ message : "internal server error"})
     }
+})
+
+app.post("/message/send",async (request,response)=> {
+  const message = request.body?.message
+  const device_id = request.body?.device_id
+  if (message && device_id) {
+    try {
+      const stage = await updateMessage({
+        message, device_id
+      });
+
+      if (stage) {
+        io.emit('message',JSON.stringify({
+          device_id,message
+        }))
+
+      response.json({message : "success"})
+      } else {
+      response.status(400).json({message : "Bad request"})
+      }
+    } catch (err) {
+      response.status(400).json({message : "Bad request"})
+      console.log(err)
+    }
+  } else {
+    response.status(400).json({message : "Bad request"})
+  }
+})
+
+app.post("/message/clear",async (_,response)=>{
+  try {
+    await deleteMessage();
+    response.json({message : "success"});
+  } catch {
+    response.status(500).send('internal server error');
+  }
 })
 
 app.post('/message',async (request,response) => {
