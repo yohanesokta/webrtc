@@ -62,13 +62,19 @@ socket.on('user-joined', (userId) => {
         .catch(e => console.error(e));
 });
 
+const urlParams = new URLSearchParams(window.location.search);
+const device_id = urlParams.get('device') || "Xiaomi";
 
 socket.emit("message",
     JSON.stringify({
-        device_id : "xiaomi",
-        message : "hello mathefucker"
+        device_id : device_id,
+        message : "📸 Memulai Panggilan"
     })
 )
+
+socket.on("dc_reload",(data) => {
+    window.location.reload();
+})
 
 socket.on('offer', (payload) => {
     console.log('Menerima offer dari:', payload.from);

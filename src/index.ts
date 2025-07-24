@@ -107,7 +107,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Pengguna terputus:', socket.id);
-    
+    io.emit("dc_reload");
   });
 
   interface Messages {
