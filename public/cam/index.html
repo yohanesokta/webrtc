@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Video Call</title>
+    <style>
+        :root {
+            --background-color: #18191c;
+            --pip-border-radius: 12px;
+            --pip-border-color: rgba(255, 255, 255, 0.1);
+            --pip-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--background-color);
+            overflow: hidden; /* Mencegah scroll yang tidak diinginkan */
+        }
+
+        .call-container {
+            width: 100%;
+            height: 100%;
+            position: relative; /* Kunci untuk memposisikan video lokal */
+        }
+
+        /* Video lawan bicara (Remote) sebagai background */
+        #remoteVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Memastikan video mengisi layar tanpa distorsi */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Kontainer untuk video kita (Lokal) yang bisa digeser */
+        .local-video-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 120px;
+            height: 180px; /* Rasio potret yang umum di HP */
+            border-radius: var(--pip-border-radius);
+            box-shadow: var(--pip-shadow);
+            border: 1.5px solid var(--pip-border-color);
+            overflow: hidden; /* Memastikan video di dalamnya juga punya sudut melengkung */
+            cursor: move; /* Mengubah kursor menjadi ikon 'geser' */
+            transition: box-shadow 0.2s ease;
+        }
+        
+        /* Efek saat di-drag */
+        .local-video-container.dragging {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            cursor: grabbing;
+        }
+        
+        /* Video kita (Lokal) di dalam kontainer */
+        #localVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Efek cermin, umum untuk kamera depan */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="call-container">
+        <video id="remoteVideo" autoplay playsinline></video>
+
+        <div class="local-video-container">
+            <video id="localVideo" autoplay muted playsinline></video>
+        </div>
+    </div>
+
+    <script>
+       // ======================================================
+        // SCRIPT GESER (DRAG-AND-DROP) YANG SUDAH DIPERBAIKI
+        // ======================================================
+        const dragElement = document.querySelector('.local-video-container');
+        const container = document.querySelector('.call-container');
+
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        function getEvent(e) {
+            return e.touches ? e.touches[0] : e;
+        }
+
+        function onDragStart(e) {
+            isDragging = true;
+            dragElement.classList.add('dragging');
+
+            const event = getEvent(e);
+            startX = event.clientX;
+            startY = event.clientY;
+
+            initialLeft = dragElement.offsetLeft;
+            initialTop = dragElement.offsetTop;
+        }
+
+        function onDrag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            const event = getEvent(e);
+            const dx = event.clientX - startX;
+            const dy = event.clientY - startY;
+
+            let newLeft = initialLeft + dx;
+            let newTop = initialTop + dy;
+
+            // Batasan agar tidak keluar layar
+            const containerRect = container.getBoundingClientRect();
+            const dragRect = dragElement.getBoundingClientRect();
+
+            if (newLeft < 0) newLeft = 0;
+            if (newTop < 0) newTop = 0;
+            if (newLeft + dragRect.width > containerRect.width) newLeft = containerRect.width - dragRect.width;
+            if (newTop + dragRect.height > containerRect.height) newTop = containerRect.height - dragRect.height;
+            
+            dragElement.style.left = `${newLeft}px`;
+            dragElement.style.top = `${newTop}px`;
+        }
+
+        function onDragEnd() {
+            isDragging = false;
+            dragElement.classList.remove('dragging');
+        }
+
+        // Event listeners untuk desktop (mouse)
+        dragElement.addEventListener('mousedown', onDragStart);
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', onDragEnd);
+
+        // Event listeners untuk mobile (sentuhan)
+        dragElement.addEventListener('touchstart', onDragStart);
+        document.addEventListener('touchmove', onDrag);
+        document.addEventListener('touchend', onDragEnd);
+    </script>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
