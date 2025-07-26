@@ -8,14 +8,20 @@ export const deleteMessage = async () => {
 
 export const updateMessage = async (message : {
     device_id : string
-    message : string
+    message : string | undefined
+    reply_id : string | undefined,
+    reply_text : string | undefined,
+    message_media : string | undefined
   }) : Promise<boolean> => {
     if (message.device_id && message.message) {
         try {
             await prisma.chats.create({
                 data : {
                     device_id : message.device_id,
-                    message_text : message.message
+                    message_text : message.message,
+                    reply_id : message.reply_id,
+                    message_media : message.message_media,
+                    reply_text : message.reply_text
                 }
             })
 
@@ -40,10 +46,10 @@ export async function getMessageData(last: string | null) : Promise<object | boo
         }
         const data =  await prisma.chats.findMany({
             where, orderBy : {
-                createAt : 'asc'
-            }
+                createAt : 'desc'
+            }, take : 100 , skip : 0
         })
-        return data
+        return data.reverse()
         
     } catch (error) {
         console.log(error)

@@ -8,29 +8,12 @@ let otherUser; // Variabel untuk menyimpan ID pengguna lain
 const peerConnection = new RTCPeerConnection({
     iceServers:
         [
+            { urls: "stun:stun.l.google.com:19302" },
             {
-                "urls": "stun:stun.relay.metered.ca:80"
+                urls: "turn:3.25.117.147:3478",
+                username: "yohanes",
+                credential: "yohanes72",
             },
-            {
-                "urls": "turn:standard.relay.metered.ca:80",
-                "username": "e651696018cad66ae03380eb",
-                "credential": "ckdfpGoJAadR+Twh"
-            },
-            {
-                "urls": "turn:standard.relay.metered.ca:80?transport=tcp",
-                "username": "e651696018cad66ae03380eb",
-                "credential": "ckdfpGoJAadR+Twh"
-            },
-            {
-                "urls": "turn:standard.relay.metered.ca:443",
-                "username": "e651696018cad66ae03380eb",
-                "credential": "ckdfpGoJAadR+Twh"
-            },
-            {
-                "urls": "turns:standard.relay.metered.ca:443?transport=tcp",
-                "username": "e651696018cad66ae03380eb",
-                "credential": "ckdfpGoJAadR+Twh"
-            }
         ]
 });
 
@@ -67,12 +50,12 @@ const device_id = urlParams.get('device') || "Xiaomi";
 
 socket.emit("message",
     JSON.stringify({
-        device_id : device_id,
-        message : "📸 Memulai Panggilan"
+        device_id: device_id,
+        message: "📸 Memulai Panggilan"
     })
 )
 
-socket.on("dc_reload",(data) => {
+socket.on("dc_reload", (data) => {
     window.location.reload();
 })
 

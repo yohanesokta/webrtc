@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -10,9 +9,12 @@ datasource db {
 }
 
 model chats {
-  id String @id @default(uuid()) @db.Uuid
-  device_id String
-  message_text String
-  createAt DateTime @default(now())
-  updateAt DateTime @updatedAt
+  id            String   @id @default(uuid()) @db.Uuid
+  device_id     String
+  reply_id      String   @default("")
+  reply_text    String   @default("")
+  message_media String   @default("")
+  message_text  String   @default("")
+  createAt      DateTime @default(now())
+  updateAt      DateTime @updatedAt
 }

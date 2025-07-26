@@ -1,92 +1,97 @@
 import express, { response } from "express";
-import { Server as SocketIoServer} from "socket.io";
+import { Server as SocketIoServer } from "socket.io";
 import path from "path";
-import http, { request } from "http";
+import http from "http";
 import dotenv from "dotenv"
 import { getMessageData, updateMessage, deleteMessage } from "./main.service";
+import { UploadRouter } from "./upload";
 
 if (process.env.NODE_ENV !== "production") {
-    dotenv.config();
+  dotenv.config();
 }
 
 
 export const app = express();
 const server = http.createServer(app);
-const io = new SocketIoServer(server);
-const credentials  = process.env.APP_CREDENSIAL || ""
+export const io = new SocketIoServer(server);
+const credentials = process.env.APP_CREDENSIAL || ""
 app.use(express.json())
 if (process.env.DISABLE_TEST != "active") {
-  app.use(express.static(path.join(__dirname,'..','public')));
+  app.use(express.static(path.join(__dirname, '..', 'public')));
   app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
   });
 }
 
-app.post('/turn', async (_,response) => {
-    try {
-      const data = await fetch(`https://yohancloud.metered.live/api/v1/turn/credentials?apiKey=${credentials}`)
-      const turnCredential = await data.json();
-      response.json(turnCredential);
-    } catch (error) {
-      console.log(error)
-      response.status(500).json({ message : "internal server error"})
-    }
-})
-
-app.post("/message/send",async (request,response)=> {
-  const message = request.body?.message
-  const device_id = request.body?.device_id
-  if (message && device_id) {
-    try {
-      const stage = await updateMessage({
-        message, device_id
-      });
-
-      if (stage) {
-        io.emit('message',JSON.stringify({
-          device_id,message
-        }))
-
-      response.json({message : "success"})
-      } else {
-      response.status(400).json({message : "Bad request"})
-      }
-    } catch (err) {
-      response.status(400).json({message : "Bad request"})
-      console.log(err)
-    }
-  } else {
-    response.status(400).json({message : "Bad request"})
+app.post('/turn', async (_, response) => {
+  try {
+    const data = await fetch(`https://yohancloud.metered.live/api/v1/turn/credentials?apiKey=${credentials}`)
+    const turnCredential = await data.json();
+    response.json(turnCredential);
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ message: "internal server error" })
   }
 })
 
-app.post("/message/clear",async (_,response)=>{
+app.post("/message/send", async (request, response) => {
+  const message = request.body?.message 
+  const device_id = request.body?.device_id
+  const reply_id = request.body?.reply_id 
+  const reply_text = request.body.reply_text 
+  const message_media = request.body.message_media 
+  if (device_id && (message || message_media)) {
+    try {
+      const stage = await updateMessage({
+        message, device_id,reply_id,reply_text,message_media
+      });
+
+      if (stage) {
+        io.emit('message', JSON.stringify({
+          device_id, message
+        }))
+
+        response.json({ message: "success" })
+      } else {
+        response.status(400).json({ message: "Bad request" })
+      }
+    } catch (err) {
+      response.status(400).json({ message: "Bad request" })
+      console.log(err)
+    }
+  } else {
+    response.status(400).json({ message: "Bad request" })
+  }
+})
+
+app.post("/message/clear", async (_, response) => {
   try {
     await deleteMessage();
-    response.json({message : "success"});
+    response.json({ message: "success" });
   } catch {
     response.status(500).send('internal server error');
   }
 })
 
-app.post('/message',async (request,response) => {
-  const last: string|null = request.body?.last || null
+app.post('/message', async (request, response) => {
+  const last: string | null = request.body?.last || null
   try {
     const data = await getMessageData(last)
     response.json(data)
   } catch (error) {
-      console.log(error)
-      response.status(500).json({ message : "internal server error"})
-    } 
+    console.log(error)
+    response.status(500).json({ message: "internal server error" })
+  }
 })
 
+app.use('/message/upload',UploadRouter)
 io.on('connection', (socket) => {
   console.log('Seorang pengguna terhubung:', socket.id);
 
   socket.on('join-room', (roomId: string) => {
     socket.join(roomId);
     console.log(`Pengguna ${socket.id} bergabung ke room ${roomId}`);
-    
+
     socket.to(roomId).emit('user-joined', socket.id);
   });
 
@@ -101,7 +106,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('ice-candidate', (payload: { target: string, candidate: any }) => {
-    
+
     io.to(payload.target).emit('ice-candidate', { from: socket.id, candidate: payload.candidate });
   });
 
@@ -112,17 +117,20 @@ io.on('connection', (socket) => {
 
   interface Messages {
     device_id : string
-    message : string
+    message : string | undefined
+    reply_id : string | undefined,
+    reply_text : string | undefined,
+    message_media : string | undefined
   }
 
-  socket.on('message', async (payload)=> {
+  socket.on('message', async (payload) => {
     console.log(payload)
     try {
-      const messages : Messages = JSON.parse(payload)
-      const status  = await updateMessage(messages)
+      const messages: Messages = JSON.parse(payload)
+      const status = await updateMessage(messages)
       if (status) {
-        
-        io.emit('message',JSON.stringify(messages))
+
+        io.emit('message', JSON.stringify(messages))
       }
     } catch (error) {
       console.log(error)
